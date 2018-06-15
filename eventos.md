@@ -110,10 +110,12 @@ Inicialmente este ralatório será calculado manualmente. Exige que um trabalho 
 #### Definições específicas do contexto Vivo
 
 - **context.customer**: Todas as informações relacionadas a cliente estarão nesta seção do Json, object
+- **context.customer.identifiers**: Lista com os identificadores de um cliente. Terá valor fixo "phone", string
 - **context.customer.identifiers[0].key**: Chave com o idenfiticador que será usado neste projeto (MSISDN). Terá
  valor fixo "phone", string
 - **context.customer.identifiers[0].value**: Chave com o valor do telefone que nós receberemos como parâmetro, string
-- **context.customer.capturedText**: Texto enviado para o inicio a conversação, string
+- **context.customer.capturedText**: Texto transcrito pelo STT ou combinado para o inicio da conversação, string
+- **context.customer.cleansedText**: Texto transcrito pelo STT após algumas tratativas de limpeza, string
 - **context.customer.listenedDataUsage**: Se o mesmo já ouviu alguma informação sobre o consumo de dados na URA, boolean
 - **context.customer.reason**: Domínio de informação sobre a razão do desligamento [CustomerAbandonedAgent,
  AgentSolvedRequest, AgentTransferedCustomer], string
@@ -141,30 +143,29 @@ Inicialmente este ralatório será calculado manualmente. Exige que um trabalho 
 - **context.agent.solution.previousSolutions**: Lista das soluções que o cliente aceitou como válida, array
 - **context.agent.solution.previousSolutions[0]**: Uma das soluções que o cliente aceitou como válida, string
 
-*********************************************
-
-Definições Específicas (CustomerInitiatedCall)
+#### Definições Específicas (CustomerInitiatedCall)
 
 Campo                                    | Obrigatório | Tamanho (bytes) | Domínio
------------------------------------------|:-----------:|----------------:|:------------: 
+-----------------------------------------|:-----------:|----------------:|:----------------------: 
 id                                       | Sim         | 36              | UUID
-eventType                                | Sim         | 21              | --
+eventType                                | Sim         | 30              | --
 version                                  | Sim         | 1               | --
 when                                     | Sim         | 30              | ISO-8601
 through                                  | Sim         | 20              | --
 correlationId                            | Sim         | 36              | UUID
 context                                  | Sim         | --              | --
 context.customer                         | Sim         | --              | --
+context.customer.identifiers             | Sim         | --              | --
 context.customer.identifiers[0].key      | Sim         | 5               | [phone]
 context.customer.identifiers[0].value    | Sim         | 15              | MSISDN
-context.customer.capturedText            | Sim         | 18              | --
+context.customer.capturedText            | Sim         | 18              | [start_conversation]
 context.customer.listenedDataUsage       | Sim         | 1               | true/false
 
-```
+```json
 {
-  "id": "f1a02020-285e-4011-ad68-02819f9fe33c"
+  "id": "f1a02020-285e-4011-ad68-02819f9fe33c",
   "eventType": "CustomerInitiatedCall",
-  "version": 1
+  "version": 1,
   "when": "2018-06-13T21:35:44.088Z",
   "through": "vda-vivo",
   "correlationId": "c3437779-9835-4f44-be96-97a2535c75f3",
@@ -183,22 +184,41 @@ context.customer.listenedDataUsage       | Sim         | 1               | true/
 }
 ```
 
-*********************************************
+#### Definições Específicas (AgentTalkedCustomer)
 
-Definições Específicas (AgentTalkedCustomer)
+Campo                                    | Obrigatório | Tamanho (bytes) | Domínio
+-----------------------------------------|:-----------:|----------------:|:------------: 
+id                                       | Sim         | 36              | UUID
+eventType                                | Sim         | 30              | --
+version                                  | Sim         | 1               | --
+when                                     | Sim         | 30              | ISO-8601
+through                                  | Sim         | 20              | --
+correlationId                            | Sim         | 36              | UUID
+context                                  | Sim         | --              | --
+context.agent                            | Sim         | --              | --
+context.agent.text                       | Sim         | 100             | --
+context.agent.command                    | Sim         | 500             | --
+context.agent.dialogType                 | Sim         | 3               | --
+context.customer                         | Sim         | --              | --
+context.customer.identifiers[0].key      | Sim         | 5               | [phone]
+context.customer.identifiers[0].value    | Sim         | 15              | MSISDN
+context.customer.capturedText            | Sim         | 100             | --
+context.customer.cleansedText            | Sim         | 100             | --
+context.customer.nlp.intent              | Sim         | 30              | --
+context.customer.nlp.score               | Sim         | --              | double
 
-```
+```json
 {
-  "id": "f1a02020-285e-4011-ad68-02819f9fe33c"
+  "id": "f1a02020-285e-4011-ad68-02819f9fe33c",
   "eventType": "AgentTalkedCustomer",
-  "version": 1
+  "version": 1,
   "when": "2018-06-13T21:35:44.088Z",
   "through": "vda-vivo",
   "correlationId": "c3437779-9835-4f44-be96-97a2535c75f3",
   "context": {
     "agent": {
-      "text": "Olá! Vamos continuar o seu atendimento por aqui. Como posso te ajudar?",
-      "command": "<Response><Play loop=\"1\">file://./InvestigaAssunto_INI_RDM1.gsm</Play><Gather input=\"speech\" timeout=\"3\"></Gather><Redirect method=\"POST\">?speechResult=SILENCE_TIMEOUT</Redirect></Response>"
+      "text": "Eu sou uma robô programada para atender clientes da Vivo, como você. Mas pode me chamar de assistente virtual.",
+      "command": "<Response><Play loop=\"1\">file://./SideTalks_Nome.gsm</Play><Gather input=\"speech\" timeout=\"3\"></Gather><Redirect method=\"POST\">?speechResult=SILENCE_TIMEOUT</Redirect></Response>",
       "dialogType": "RDM"
     },
     "customer": {
@@ -208,9 +228,10 @@ Definições Específicas (AgentTalkedCustomer)
           "value": "11968322333"
         }
       ],
-      "capturedText": "Posso falar com um atendente humano",
+      "capturedText": "Qual é o seu nome hein moça",
+      "cleansedText": "Qual seu nome moça",
       "nlp": {
-        "intent": "TRANSFERE",
+        "intent": "QUAL O SEU NOME",
         "score": 0.9900302
       }
     }
@@ -218,15 +239,37 @@ Definições Específicas (AgentTalkedCustomer)
 }
 ```
 
-*********************************************
+#### Definições Específicas (CustomerTalkedAgent)
 
-Definições Específicas (CustomerTalkedAgent)
+Campo                                                     | Obrigatório | Tamanho (bytes) | Domínio
+----------------------------------------------------------|:-----------:|----------------:|:------------: 
+id                                                        | Sim         | 36              | UUID
+eventType                                                 | Sim         | 30              | --
+version                                                   | Sim         | 1               | --
+when                                                      | Sim         | 30              | ISO-8601
+through                                                   | Sim         | 20              | --
+correlationId                                             | Sim         | 36              | UUID
+context                                                   | Sim         | --              | --
+context.customer                                          | Sim         | --              | --
+context.customer.identifiers[0].key                       | Sim         | 5               | [phone]
+context.customer.identifiers[0].value                     | Sim         | 15              | MSISDN
+context.customer.capturedText                             | Sim         | 100             | --
+context.customer.cleansedText                             | Sim         | 100             | --
+context.customer.nlp.intent                               | Sim         | 30              | --
+context.customer.nlp.score                                | Sim         | --              | double
+context.customer.nlp.realResponse                         | Sim         | --              | --
+context.customer.nlp.realResponse.topScoringIntent        | Sim         | --              | --
+context.customer.nlp.realResponse.topScoringIntent.intent | Sim         | 30              | --
+context.customer.nlp.realResponse.topScoringIntent.score  | Sim         | --              | double
+context.customer.nlp.realResponse.intents                 | Sim         | --              | --
+context.customer.nlp.realResponse.intents[0].intent       | Sim         | 30              | --
+context.customer.nlp.realResponse.intents[0].score        | Sim         | --              | double
 
-```
+```json
 {
-  "id": "f1a02020-285e-4011-ad68-02819f9fe33c"
+  "id": "f1a02020-285e-4011-ad68-02819f9fe33c",
   "eventType": "CustomerTalkedAgent",
-  "version": 1
+  "version": 1,
   "when": "2018-06-13T21:35:44.088Z",
   "through": "vda-vivo",
   "correlationId": "c3437779-9835-4f44-be96-97a2535c75f3",
@@ -239,6 +282,7 @@ Definições Específicas (CustomerTalkedAgent)
         }
       ],
       "capturedText": "Posso falar com um atendente humano",
+      "cleansedText": "Posso falar atendente humano",
       "nlp": {
         "intent": "TRANSFERE",
         "score": 0.9900302,
@@ -268,19 +312,90 @@ Definições Específicas (CustomerTalkedAgent)
 }
 ```
 
-*********************************************
+#### Definições Específicas (AgentTransferedCustomer)
 
-Definições Específicas (AgentTransferedCustomer)
+Campo                                    | Obrigatório | Tamanho (bytes) | Domínio
+-----------------------------------------|:-----------:|----------------:|:------------: 
+id                                       | Sim         | 36              | UUID
+eventType                                | Sim         | 30              | --
+version                                  | Sim         | 1               | --
+when                                     | Sim         | 30              | ISO-8601
+through                                  | Sim         | 20              | --
+correlationId                            | Sim         | 36              | UUID
+context                                  | Sim         | --              | --
+context.agent                            | Sim         | --              | --
+context.agent.text                       | Sim         | 100             | --
+context.agent.command                    | Sim         | 500             | --
+context.agent.dialogType                 | Sim         | 3               | --
+context.customer                         | Sim         | --              | --
+context.customer.identifiers[0].key      | Sim         | 5               | [phone]
+context.customer.identifiers[0].value    | Sim         | 15              | MSISDN
+context.customer.capturedText            | Sim         | 100             | --
+context.customer.cleansedText            | Sim         | 100             | --
+context.customer.nlp.intent              | Sim         | 30              | --
+context.customer.nlp.score               | Sim         | --              | double
 
-*********************************************
-
-Definições Específicas (AgentSolvedRequest)
-
-```
+```json
 {
-  "id": "f1a02020-285e-4011-ad68-02819f9fe33c"
+  "id": "f1a02020-285e-4011-ad68-02819f9fe33c",
+  "eventType": "AgentTransferedCustomer",
+  "version": 1,
+  "when": "2018-06-13T21:35:44.088Z",
+  "through": "vda-vivo",
+  "correlationId": "c3437779-9835-4f44-be96-97a2535c75f3",
+  "context": {
+    "agent": {
+      "text": "Entendi. Pra resolver essa solicitação é melhor você falar com um especialista. Só um instante.",
+      "command": "<Response><Play loop=\"1\">file://./Transfere_else.gsm</Play><Enqueue>TRANSFERE</Enqueue></Response>",
+      "dialogType": "else"
+    },
+    "customer": {
+      "identifiers": [
+        {
+          "key": "phone",
+          "value": "11968322333"
+        }
+      ],
+      "capturedText": "Posso falar com um atendente humano",
+      "cleansedText": "Posso falar atendente humano",
+      "nlp": {
+        "intent": "TRANSFERE",
+        "score": 0.9900302
+      }
+    }
+  }
+}
+```
+
+#### Definições Específicas (AgentSolvedRequest)
+
+Campo                                       | Obrigatório | Tamanho (bytes) | Domínio
+--------------------------------------------|:-----------:|----------------:|:------------: 
+id                                          | Sim         | 36              | UUID
+eventType                                   | Sim         | 30              | --
+version                                     | Sim         | 1               | --
+when                                        | Sim         | 30              | ISO-8601
+through                                     | Sim         | 20              | --
+correlationId                               | Sim         | 36              | UUID
+context                                     | Sim         | --              | --
+context.agent                               | Sim         | --              | --
+context.agent.solution                      | Sim         | --              | --
+context.agent.solution.lastSolution         | Sim         | 30              | --
+context.agent.solution.previousSolutions    | Sim         | --              | --
+context.agent.solution.previousSolutions[0] | Sim         | 30              | --
+context.customer                            | Sim         | --              | --
+context.customer.identifiers[0].key         | Sim         | 5               | [phone]
+context.customer.identifiers[0].value       | Sim         | 15              | MSISDN
+context.customer.capturedText               | Sim         | 100             | --
+context.customer.cleansedText               | Sim         | 100             | --
+context.customer.nlp.intent                 | Sim         | 30              | --
+context.customer.nlp.score                  | Sim         | --              | double
+
+```json
+{
+  "id": "f1a02020-285e-4011-ad68-02819f9fe33c",
   "eventType": "AgentSolvedRequest",
-  "version": 1
+  "version": 1,
   "when": "2018-06-13T21:35:44.088Z",
   "through": "vda-vivo",
   "correlationId": "c3437779-9835-4f44-be96-97a2535c75f3",
@@ -311,19 +426,67 @@ Definições Específicas (AgentSolvedRequest)
 }
 ```
 
-*********************************************
+#### Definições Específicas (CustomerAbandonedAgent)
 
-Definições Específicas (CustomerAbandonedAgent)
+Campo                                    | Obrigatório | Tamanho (bytes) | Domínio
+-----------------------------------------|:-----------:|----------------:|:----------------------: 
+id                                       | Sim         | 36              | UUID
+eventType                                | Sim         | 30              | --
+version                                  | Sim         | 1               | --
+when                                     | Sim         | 30              | ISO-8601
+through                                  | Sim         | 20              | --
+correlationId                            | Sim         | 36              | UUID
+context                                  | Sim         | --              | --
+context.customer                         | Sim         | --              | --
+context.customer.identifiers             | Sim         | --              | --
+context.customer.identifiers[0].key      | Sim         | 5               | [phone]
+context.customer.identifiers[0].value    | Sim         | 15              | MSISDN
+context.customer.capturedText            | Sim         | 18              | [call_disconnected_by_the_customer]
 
-*********************************************
-
-Definições Específicas (CustomerCallEnded)
-
-```
+```json
 {
-  "id": "f1a02020-285e-4011-ad68-02819f9fe33c"
+  "id": "f1a02020-285e-4011-ad68-02819f9fe33c",
+  "eventType": "CustomerAbandonedAgent",
+  "version": 1,
+  "when": "2018-06-13T21:35:44.088Z",
+  "through": "vda-vivo",
+  "correlationId": "c3437779-9835-4f44-be96-97a2535c75f3",
+  "context": {
+    "customer": {
+      "identifiers": [
+        {
+          "key": "phone",
+          "value": "11968322333"
+        }
+      ],
+      "capturedText": "call_disconnected_by_the_customer"
+    }
+  }
+}
+```
+
+#### Definições Específicas (CustomerCallEnded)
+
+Campo                                    | Obrigatório | Tamanho (bytes) | Domínio
+-----------------------------------------|:-----------:|----------------:|:----------------------: 
+id                                       | Sim         | 36              | UUID
+eventType                                | Sim         | 30              | --
+version                                  | Sim         | 1               | --
+when                                     | Sim         | 30              | ISO-8601
+through                                  | Sim         | 20              | --
+correlationId                            | Sim         | 36              | UUID
+context                                  | Sim         | --              | --
+context.customer                         | Sim         | --              | --
+context.customer.identifiers             | Sim         | --              | --
+context.customer.identifiers[0].key      | Sim         | 5               | [phone]
+context.customer.identifiers[0].value    | Sim         | 15              | MSISDN
+context.customer.reason                  | Sim         | 30              | [CustomerAbandonedAgent, AgentSolvedRequest, AgentTransferedCustomer]
+
+```json
+{
+  "id": "f1a02020-285e-4011-ad68-02819f9fe33c",
   "eventType": "CustomerCallEnded",
-  "version": 1
+  "version": 1,
   "when": "2018-06-13T21:35:44.088Z",
   "through": "vda-vivo",
   "correlationId": "c3437779-9835-4f44-be96-97a2535c75f3",
@@ -344,5 +507,3 @@ Definições Específicas (CustomerCallEnded)
 *********************************************
 
 Definições Específicas (AgentCalledAPI)
-context.customer: Todas as informações relacionadas a cliente estarão nesta seção do Json, object, obrigatório
-context.agent: Todas as informações relacionadas ao Agente Conversacional (robô) estarão nesta seção do Json, object, obrigatório
