@@ -138,17 +138,26 @@ Inicialmente este ralatório será calculado manualmente. Exige que um trabalho 
 - **context.agent.command**: TwiML com as instruções a serem executadas pela URA, string
 - **context.agent.dialogType**: Domínio com o tipo de diálogo que será executado, **Completar com o domínio inteiro**
  [REJ, SIL, DES], string
+- **context.agent.scriptPoint**: Marcação do scriptpoint por BI, string
 - **context.agent.solution**: Agrupa as informações das soluções ocorridas nesta conversação, object
 - **context.agent.solution.lastSolution**: Última solução que o cliente aceitou como válida, string
 - **context.agent.solution.previousSolutions**: Lista das soluções que o cliente aceitou como válida, array
 - **context.agent.solution.previousSolutions[0]**: Uma das soluções que o cliente aceitou como válida, string
+
+- **context.api**: Todas as informações relacionadas a chamadas a API, object
+- **context.api.apiName**: Nome da API que está sendo executada. Ex: LUIS, string
+- **context.api.uri**: URI que está sendo executada para ter acesso ao serviço, string
+- **context.api.headers**: Headers retornados pela API HTTP, string
+- **context.api.body**: Body retornado pela API HTTP, string
+- **context.api.executionElapsedTime**: Tempo, em milisegundos da execução da API, integer
+- **context.api.httpStatus**: HTTP Status Code da resposta da execução do serviço, integer
 
 #### Definições Específicas (CustomerInitiatedCall)
 
 Campo                                    | Obrigatório | Tamanho (bytes) | Domínio
 -----------------------------------------|:-----------:|----------------:|:----------------------: 
 id                                       | Sim         | 36              | UUID
-eventType                                | Sim         | 30              | --
+eventType                                | Sim         | 30              | [CustomerInitiatedCall]
 version                                  | Sim         | 1               | --
 when                                     | Sim         | 30              | ISO-8601
 through                                  | Sim         | 20              | --
@@ -189,7 +198,7 @@ context.customer.listenedDataUsage       | Sim         | 1               | true/
 Campo                                    | Obrigatório | Tamanho (bytes) | Domínio
 -----------------------------------------|:-----------:|----------------:|:------------: 
 id                                       | Sim         | 36              | UUID
-eventType                                | Sim         | 30              | --
+eventType                                | Sim         | 30              | [AgentTalkedCustomer]
 version                                  | Sim         | 1               | --
 when                                     | Sim         | 30              | ISO-8601
 through                                  | Sim         | 20              | --
@@ -199,6 +208,7 @@ context.agent                            | Sim         | --              | --
 context.agent.text                       | Sim         | 100             | --
 context.agent.command                    | Sim         | 500             | --
 context.agent.dialogType                 | Sim         | 3               | --
+context.agent.scriptPoint                | Sim         | 8               | --
 context.customer                         | Sim         | --              | --
 context.customer.identifiers[0].key      | Sim         | 5               | [phone]
 context.customer.identifiers[0].value    | Sim         | 15              | MSISDN
@@ -219,7 +229,8 @@ context.customer.nlp.score               | Sim         | --              | doubl
     "agent": {
       "text": "Eu sou uma robô programada para atender clientes da Vivo, como você. Mas pode me chamar de assistente virtual.",
       "command": "<Response><Play loop=\"1\">file://./SideTalks_Nome.gsm</Play><Gather input=\"speech\" timeout=\"3\"></Gather><Redirect method=\"POST\">?speechResult=SILENCE_TIMEOUT</Redirect></Response>",
-      "dialogType": "RDM"
+      "dialogType": "RDM",
+      "scriptPoint": "12345"
     },
     "customer": {
       "identifiers": [
@@ -244,7 +255,7 @@ context.customer.nlp.score               | Sim         | --              | doubl
 Campo                                                     | Obrigatório | Tamanho (bytes) | Domínio
 ----------------------------------------------------------|:-----------:|----------------:|:------------: 
 id                                                        | Sim         | 36              | UUID
-eventType                                                 | Sim         | 30              | --
+eventType                                                 | Sim         | 30              | [CustomerTalkedAgent]
 version                                                   | Sim         | 1               | --
 when                                                      | Sim         | 30              | ISO-8601
 through                                                   | Sim         | 20              | --
@@ -317,7 +328,7 @@ context.customer.nlp.realResponse.intents[0].score        | Sim         | --    
 Campo                                    | Obrigatório | Tamanho (bytes) | Domínio
 -----------------------------------------|:-----------:|----------------:|:------------: 
 id                                       | Sim         | 36              | UUID
-eventType                                | Sim         | 30              | --
+eventType                                | Sim         | 30              | [AgentTransferedCustomer]
 version                                  | Sim         | 1               | --
 when                                     | Sim         | 30              | ISO-8601
 through                                  | Sim         | 20              | --
@@ -372,7 +383,7 @@ context.customer.nlp.score               | Sim         | --              | doubl
 Campo                                       | Obrigatório | Tamanho (bytes) | Domínio
 --------------------------------------------|:-----------:|----------------:|:------------: 
 id                                          | Sim         | 36              | UUID
-eventType                                   | Sim         | 30              | --
+eventType                                   | Sim         | 30              | [AgentSolvedRequest]
 version                                     | Sim         | 1               | --
 when                                        | Sim         | 30              | ISO-8601
 through                                     | Sim         | 20              | --
@@ -431,7 +442,7 @@ context.customer.nlp.score                  | Sim         | --              | do
 Campo                                    | Obrigatório | Tamanho (bytes) | Domínio
 -----------------------------------------|:-----------:|----------------:|:----------------------: 
 id                                       | Sim         | 36              | UUID
-eventType                                | Sim         | 30              | --
+eventType                                | Sim         | 30              | [CustomerAbandonedAgent]
 version                                  | Sim         | 1               | --
 when                                     | Sim         | 30              | ISO-8601
 through                                  | Sim         | 20              | --
@@ -470,7 +481,7 @@ context.customer.capturedText            | Sim         | 18              | [call
 Campo                                    | Obrigatório | Tamanho (bytes) | Domínio
 -----------------------------------------|:-----------:|----------------:|:----------------------: 
 id                                       | Sim         | 36              | UUID
-eventType                                | Sim         | 30              | --
+eventType                                | Sim         | 30              | [CustomerCallEnded]
 version                                  | Sim         | 1               | --
 when                                     | Sim         | 30              | ISO-8601
 through                                  | Sim         | 20              | --
@@ -507,3 +518,41 @@ context.customer.reason                  | Sim         | 30              | [Cust
 *********************************************
 
 Definições Específicas (AgentCalledAPI)
+
+Campo                                    | Obrigatório | Tamanho (bytes) | Domínio
+-----------------------------------------|:-----------:|----------------:|:----------------------: 
+id                                       | Sim         | 36              | UUID
+eventType                                | Sim         | 30              | [AgentCalledAPI
+version                                  | Sim         | 1               | --
+when                                     | Sim         | 30              | ISO-8601
+through                                  | Sim         | 20              | --
+correlationId                            | Sim         | 36              | UUID
+context                                  | Sim         | --              | --
+context.api                              | Sim         | --              | --
+context.api.apiName                      | Sim         | 30              | --
+context.api.uri                          | Sim         | 1000            | --
+context.api.headers                      | Sim         | 1000            | --
+context.api.body                         | Sim         | 2000            | --
+context.api.httpStatus                   | Sim         | --              | HTTP Status Code
+context.api.executionElapsedTime         | Sim         | --              | Tempo em MS
+
+```json
+{
+  "id": "f1a02020-285e-4011-ad68-02819f9fe33c",
+  "eventType": "AgentCalledAPI",
+  "version": 1,
+  "when": "2018-06-13T21:35:44.088Z",
+  "through": "vda-vivo",
+  "correlationId": "c3437779-9835-4f44-be96-97a2535c75f3",
+  "context": {
+    "api": {
+      "apiName": "LUIS",
+      "uri": "https://lalala.com.br/lalala",
+      "headers": "status: 200",
+      "body": "{\"intent\": \"TRANSFERE\", \"score\": 0.9900302}",
+      "httpStatus": 200,
+      "executionElapsedTime": 132
+    }
+  }
+}
+```
